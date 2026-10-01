@@ -1,0 +1,86 @@
+@page "/"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject Unite.Dashboard.Services.DashboardTelemetryService Telemetry
+
+<PageTitle>Unite Overview</PageTitle>
+
+<h1>Backend Overview</h1>
+<p>Live view of connected services and the events flowing through the system.</p>
+
+<h2>Connected Services</h2>
+@if (Telemetry.ConnectedServices.Count == 0)
+{
+    <p><em>No services have published events yet.</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Last Seen (UTC)</th>
+                <th>Total Events Published</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var service in Telemetry.ConnectedServices.OrderBy(s => s.ServiceName))
+            {
+                <tr>
+                    <td>@service.ServiceName</td>
+                    <td>@service.LastSeenUtc.ToString("u")</td>
+                    <td>@service.TotalEventsPublished</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2>Recent Event Activity</h2>
+@if (Telemetry.RecentActivity.Count == 0)
+{
+    <p><em>No events recorded yet.</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Occurred (UTC)</th>
+                <th>Source Service</th>
+                <th>Event Type</th>
+                <th>Payload</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var activity in Telemetry.RecentActivity)
+            {
+                <tr>
+                    <td>@activity.OccurredAtUtc.ToString("u")</td>
+                    <td>@activity.SourceService</td>
+                    <td>@activity.EventType</td>
+                    <td><code>@activity.Payload</code></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Telemetry.OnChanged += HandleTelemetryChanged;
+        await Telemetry.InitializeAsync();
+    }
+
+    private void HandleTelemetryChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Telemetry.OnChanged -= HandleTelemetryChanged;
+        return ValueTask.CompletedTask;
+    }
+}
