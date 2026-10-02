@@ -1,0 +1,16 @@
+## .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+.vs/
+.vscode/
+*.received.*
+*.sln.docstates
+
+## Rider / VS
+.idea/
+
+## Logs
+*.log
